@@ -56,9 +56,9 @@ Uses [`yfinance`](https://github.com/ranaroussi/yfinance) to pull the **maximum*
 
 Prices are converted to **log returns**:
 
-$$
-r_t = \ln\left(\frac{P_t}{P_{t-1}}\right)
-$$
+```math
+r_t=\ln\left(\frac{P_t}{P_{t-1}}\right)
+```
 
 The mean model is **constant**: each simulated day has drift equal to the fitted historical average $\mu$. That is a simple, transparent assumption — not a crystal ball for future expected return.
 
@@ -71,14 +71,9 @@ Equity volatility is neither constant nor symmetric:
 
 This server fits **EGARCH(1,1) with leverage** ($p=1$, $o=1$, $q=1$) via the [`arch`](https://arch.readthedocs.io/) package. Conditionally, log-variance evolves roughly as:
 
-$$
-\ln(\sigma_t^2)
-=
-\omega
-+ \alpha\bigl(\lvert z_{t-1}\rvert - \mathbb{E}[\lvert z\rvert]\bigr)
-+ \gamma z_{t-1}
-+ \beta\ln(\sigma_{t-1}^2)
-$$
+```math
+\ln(\sigma_t^2)=\omega+\alpha\bigl(\lvert z_{t-1}\rvert-\mathbb{E}[\lvert z\rvert]\bigr)+\gamma z_{t-1}+\beta\ln(\sigma_{t-1}^2)
+```
 
 For equities, the leverage coefficient $\gamma$ is typically **negative**: a negative shock $z$ increases tomorrow’s volatility.
 
