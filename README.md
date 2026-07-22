@@ -15,7 +15,7 @@ You ← JSON: price/return percentiles, vol, max drawdowns, loss probabilities
 
 ## Why this matters
 
-Large language models are excellent at reasoning and explanation. They are **not** engines for sampling fat-tailed returns under time-varying volatility. Left alone, an agent might invent plausible-looking percentiles or hand-wave “historical vol × √T”.
+Large language models are excellent at reasoning and explanation. They are **not** engines for sampling fat-tailed returns under time-varying volatility. Left alone, an agent might invent plausible-looking percentiles or hand-wave “historical vol $\times\sqrt{T}$”.
 
 This server closes that gap:
 
@@ -36,11 +36,11 @@ The agent stays in charge of *interpretation* and *conversation*. The MCP owns *
 Yahoo Finance (max history)
         │  adjusted daily Close
         ▼
-  Log returns  r_t = ln(P_t / P_{t-1})
+  Log returns
         │
         ▼
   Fit EGARCH(1,1) + leverage  +  skewed-t shocks
-        │  constant mean drift (historical μ)
+        │  constant mean drift (historical mean)
         ▼
   Simulate N paths  (default 5,000) out to 10 years
         │
@@ -54,7 +54,13 @@ Uses [`yfinance`](https://github.com/ranaroussi/yfinance) to pull the **maximum*
 
 ### 2. Returns and drift
 
-Prices are converted to **log returns**. The mean model is **constant**: each simulated day has drift equal to the fitted historical average μ. That is a simple, transparent assumption — not a crystal ball for future expected return.
+Prices are converted to **log returns**:
+
+$$
+r_t = \ln\left(\frac{P_t}{P_{t-1}}\right)
+$$
+
+The mean model is **constant**: each simulated day has drift equal to the fitted historical average $\mu$. That is a simple, transparent assumption — not a crystal ball for future expected return.
 
 ### 3. Volatility: EGARCH with leverage
 
@@ -63,13 +69,18 @@ Equity volatility is neither constant nor symmetric:
 - **Volatility clustering** — turbulent days tend to follow turbulent days.
 - **Leverage effect** — large *down* moves tend to raise future vol more than equally large *up* moves.
 
-This server fits **EGARCH(1,1) with leverage** (`p=1`, `o=1`, `q=1`) via the [`arch`](https://arch.readthedocs.io/) package. Conditionally, log-variance evolves roughly as:
+This server fits **EGARCH(1,1) with leverage** ($p=1$, $o=1$, $q=1$) via the [`arch`](https://arch.readthedocs.io/) package. Conditionally, log-variance evolves roughly as:
 
-```text
-log(σ²_t) = ω + α(|z_{t-1}| − E|z|) + γ z_{t-1} + β log(σ²_{t-1})
-```
+$$
+\ln(\sigma_t^2)
+=
+\omega
++ \alpha\bigl(\lvert z_{t-1}\rvert - \mathbb{E}[\lvert z\rvert]\bigr)
++ \gamma z_{t-1}
++ \beta\ln(\sigma_{t-1}^2)
+$$
 
-For equities, the leverage coefficient γ is typically **negative**: a negative shock `z` increases tomorrow’s volatility.
+For equities, the leverage coefficient $\gamma$ is typically **negative**: a negative shock $z$ increases tomorrow’s volatility.
 
 ### 4. Shocks: skewed Student-t
 
@@ -80,7 +91,7 @@ Gaussian shocks understate crash risk. Standardized innovations are drawn from a
 
 ### 5. Monte Carlo paths
 
-Given the fitted parameters, the server simulates `n_paths` forward trajectories (vectorized NumPy loop for stability out to multi-year horizons). Each path is a full price series; horizons are slices of those same paths so short- and long-term stats are coherent.
+Given the fitted parameters, the server simulates $N$ forward trajectories (`n_paths`; vectorized NumPy loop for stability out to multi-year horizons). Each path is a full price series; horizons are slices of those same paths so short- and long-term stats are coherent.
 
 ### 6. Horizons (trading days)
 
@@ -229,7 +240,7 @@ One Python file keeps the project easy to read, audit, and ship.
 
 This is a **research / educational risk tool**, not investment advice and not a guarantee of future prices.
 
-- Past drift μ is **not** a forecast of expected return; long-horizon medians inherit that assumption.
+- Past drift $\mu$ is **not** a forecast of expected return; long-horizon medians inherit that assumption.
 - EGARCH(1,1)+leverage and skewed-t are strong defaults for many liquid equities/ETFs — not universally “optimal” for every ticker.
 - Yahoo data quality and corporate actions can affect results; always check `inspect_asset_model` on unfamiliar symbols.
 - Extremely long horizons (5y–10y) compound model risk; treat tails as illustrative, not certainties.
