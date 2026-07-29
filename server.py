@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from typing import Any
 
 # Keep MCP handshake quiet and fast (heavy libs load only when the tool runs).
 logging.getLogger("mcp").setLevel(logging.WARNING)
-os.environ.setdefault("FASTMCP_LOG_LEVEL", "WARNING")
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 
 PERCENTILES = (1, 5, 10, 25, 50, 75, 90, 95, 99)
 MDD_PERCENTILES = (1, 5, 10, 25, 50, 75, 90, 95, 99)
@@ -32,7 +30,7 @@ MAX_HORIZON = max(HORIZONS.values())
 MIN_OBS = 252
 TRADING_DAYS_PER_YEAR = 252.0
 
-mcp = FastMCP("mcp-monte-carlo")
+mcp = MCPServer("mcp-monte-carlo", version="0.1.0", log_level="WARNING")
 
 def _extract_close(raw, ticker: str):
     """Return a 1-D Close series from a yfinance download."""

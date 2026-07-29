@@ -9,7 +9,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "arch>=7.0.0",
-    "mcp[cli]>=1.2.0",
+    "mcp[cli]>=2,<3",
     "numpy>=2.0.0",
     "pandas>=2.2.0",
     "yfinance>=0.2.40",
